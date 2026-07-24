@@ -53,7 +53,7 @@ class Tool(abc.ABC):
 
 
 class LLMClient(abc.ABC):
-    """Pluggable model client. AzureOpenAI / OpenAI in prod; FakeLLM in tests."""
+    """Pluggable model client. AzureOpenAI / OpenAI in prod; LocalLLM in tests."""
 
     @abc.abstractmethod
     async def complete(self, messages: List[Message], tools: List[Tool]) -> Message:
@@ -122,7 +122,7 @@ def _parse_tool_calls(content: str) -> List[Dict[str, Any]]:
     """Parse a JSON tool-call block from the model output.
 
     Expected format (one per line):  TOOL(name=args_json)
-    Keeps the loop cloud-agnostic and easy to test with FakeLLM."""
+    Keeps the loop cloud-agnostic and easy to test with LocalLLM."""
     import json
     import re
 

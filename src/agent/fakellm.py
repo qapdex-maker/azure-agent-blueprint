@@ -10,7 +10,7 @@ from typing import List
 from src.agent.base import LLMClient, Message, Tool
 
 
-class FakeLLM(LLMClient):
+class LocalLLM(LLMClient):
     """Deterministic responder.
 
     If `script` is provided, each `complete()` call pops the next scripted line.

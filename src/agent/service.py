@@ -13,7 +13,7 @@ import sys
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 from src.agent.base import Agent, Message
-from src.agent.fakellm import FakeLLM
+from src.agent.fakellm import LocalLLM
 from src.agent.azure import AzureOpenAIClient
 from src.agent.foundry import FoundryClient
 from src.tools.builtin import CostLookupTool, RemediationScriptTool, ClockTool
@@ -25,7 +25,7 @@ def build_llm():
     Precedence:
       1. FOUNDRY_PROJECT_ENDPOINT set  -> Foundry Agent Service client
       2. AZURE_OPENAI_ENDPOINT set     -> Azure OpenAI client
-      3. neither                       -> FakeLLM (local/test)
+      3. neither                       -> LocalLLM (local/test)
     API key / token is read from env at call time, never stored in code.
     """
     foundry_ep = os.environ.get("FOUNDRY_PROJECT_ENDPOINT")
@@ -43,7 +43,7 @@ def build_llm():
             api_key=os.environ.get("AZURE_OPENAI_API_KEY"),
             deployment=os.environ.get("AZURE_OPENAI_DEPLOYMENT", "gpt-4o"),
         )
-    return FakeLLM()
+    return LocalLLM()
 
 
 def build_agent() -> Agent:

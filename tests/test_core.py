@@ -1,7 +1,7 @@
 """Unit tests for the Azure Agent Blueprint core.
 
 Run:  python -m pytest tests/  (or: python tests/test_core.py)
-No Azure / OpenAI required — uses FakeLLM + scripted tool calls.
+No Azure / OpenAI required — uses LocalLLM + scripted tool calls.
 """
 import asyncio
 import sys
@@ -10,7 +10,7 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from src.agent.base import Agent, Message
-from src.agent.fakellm import FakeLLM
+from src.agent.fakellm import LocalLLM
 from src.tools.builtin import CostLookupTool, RemediationScriptTool, ClockTool
 from src.orchestrator.chain import Orchestrator, ChainStep
 
@@ -23,7 +23,7 @@ def build_agent(script):
     agent = Agent(
         name="finops",
         system_prompt="You are a FinOps agent.",
-        llm=FakeLLM(script),
+        llm=LocalLLM(script),
         tools=[CostLookupTool(), RemediationScriptTool(), ClockTool()],
     )
     return agent
@@ -72,9 +72,9 @@ def test_remediation_write_never_delete():
 
 
 def test_orchestrator_chaining():
-    a1 = Agent("planner", "plan", FakeLLM(["TOOL(clock={})", "PLAN: assess costs"]))
+    a1 = Agent("planner", "plan", LocalLLM(["TOOL(clock={})", "PLAN: assess costs"]))
     a1.add_tool(ClockTool())
-    a2 = Agent("executor", "exec", FakeLLM(["EXEC: apply plan"]))
+    a2 = Agent("executor", "exec", LocalLLM(["EXEC: apply plan"]))
     orch = Orchestrator(
         agents={"planner": a1, "executor": a2},
         steps=[
@@ -91,7 +91,7 @@ def test_orchestrator_chaining():
 def test_step_budget_terminates():
     # Infinite tool loop must be bounded by max_steps.
     script = ['TOOL(clock={})'] * 20  # always calls tool, never answers
-    agent = build_agent(script[:5])  # FakeLLM exhausts -> returns last as answer
+    agent = build_agent(script[:5])  # LocalLLM exhausts -> returns last as answer
     out = run(agent.chat("loop"))
     assert out is not None
     print("PASS test_step_budget_terminates")

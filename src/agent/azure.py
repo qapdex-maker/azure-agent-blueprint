@@ -38,7 +38,7 @@ class AzureOpenAIClient(LLMClient):
             except ImportError as e:
                 raise RuntimeError(
                     "openai SDK not installed; install with `pip install openai` "
-                    "or use FakeLLM for local runs."
+                    "or use LocalLLM for local runs."
                 ) from e
             self._client = AzureOpenAI(
                 azure_endpoint=self.endpoint,
