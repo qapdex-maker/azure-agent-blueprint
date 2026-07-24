@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Azure Agent Blueprint — Production-Grade Multi-Agent Workflows</title>
+<style>
+  :root{
+    --navy:#1B2A4A; --steel:#4A6FA5; --gold:#C5A55A;
+    --green:#27AE60; --red:#C0392B; --bg:#0F172A; --card:#16213E;
+    --text:#E6ECF5; --muted:#9FB0C9;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+       background:var(--bg);color:var(--text);line-height:1.6}
+  a{color:var(--gold);text-decoration:none}
+  a:hover{text-decoration:underline}
+  header{background:linear-gradient(135deg,var(--navy),#0d1830);padding:64px 24px 48px;text-align:center;border-bottom:3px solid var(--gold)}
+  header h1{font-size:2.4rem;font-weight:800;letter-spacing:-0.5px}
+  header p{color:var(--muted);margin-top:12px;font-size:1.1rem;max-width:680px;margin-left:auto;margin-right:auto}
+  .badge{display:inline-block;background:var(--steel);color:#fff;padding:4px 12px;border-radius:999px;font-size:.8rem;margin-top:16px}
+  .wrap{max-width:960px;margin:0 auto;padding:0 24px}
+  section{padding:48px 0;border-bottom:1px solid rgba(255,255,255,.06)}
+  h2{font-size:1.6rem;color:var(--gold);margin-bottom:20px}
+  h3{font-size:1.1rem;color:var(--steel);margin:18px 0 8px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px;margin-top:20px}
+  .card{background:var(--card);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:22px}
+  .card h4{color:var(--text);font-size:1.05rem;margin-bottom:8px}
+  .card p{color:var(--muted);font-size:.92rem}
+  code{background:#0a1124;padding:2px 7px;border-radius:5px;font-family:ui-monospace,Menlo,monospace;font-size:.86rem;color:var(--gold)}
+  pre{background:#0a1124;border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:18px;overflow-x:auto;margin-top:14px;font-size:.85rem;line-height:1.5}
+  pre code{background:none;padding:0;color:#cdd9ee}
+  .arch{background:var(--card);border-radius:12px;padding:24px;margin-top:18px;font-family:ui-monospace,Menlo,monospace;font-size:.84rem;color:#bcd0ee;white-space:pre;overflow-x:auto}
+  .checks{list-style:none;margin-top:14px}
+  .checks li{padding:6px 0;border-bottom:1px dashed rgba(255,255,255,.08);color:var(--muted)}
+  .ok{color:var(--green)} .pend{color:var(--gold)}
+  footer{text-align:center;padding:36px 24px;color:var(--muted);font-size:.85rem}
+  .cta{display:inline-block;background:var(--gold);color:#1B2A4A;font-weight:700;padding:12px 28px;border-radius:8px;margin-top:18px}
+  .cta:hover{text-decoration:none;opacity:.9}
+</style>
+</head>
+<body>
+<header>
+  <div class="badge">Azure Agent Framework · MCP · Bicep/azd · App Insights</div>
+  <h1>Azure Agent Blueprint</h1>
+  <p>Production-grade multi-agent workflow scaffold. Built from the Microsoft Gold-Path —
+     dependency-free agent core, MCP-compatible tools, one-command <code>azd up</code> deploy.</p>
+  <a class="cta" href="https://github.com/qapdex-maker/azure-agent-blueprint">View on GitHub</a>
+</header>
+
+<div class="wrap">
+
+  <section>
+    <h2>What it is</h2>
+    <div class="grid">
+      <div class="card"><h4>Agent Core</h4><p>Bounded orchestration chaining — no infinite tool loops. Agent + Tool + LLMClient abstractions.</p></div>
+      <div class="card"><h4>MCP Tools</h4><p>Cost lookup, remediation script generation. Guardrail: <strong>write, never delete</strong>.</p></div>
+      <div class="card"><h4>Orchestrator</h4><p>Sequential multi-agent pipeline with pluggable checkpointing (durable-task pattern).</p></div>
+      <div class="card"><h4>Observability</h4><p>OpenTelemetry + Azure Monitor (App Insights) on by default.</p></div>
+      <div class="card"><h4>Cloud LLM</h4><p>Azure OpenAI + Foundry Agent Service, env-selected. No secrets in code.</p></div>
+      <div class="card"><h4>IaC + Deploy</h4><p>Bicep + <code>azd up</code>: RG → Log Analytics + App Insights → Container App + Managed Identity.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Architecture</h2>
+    <div class="arch">User → Container App (svc :8000) → Managed Identity
+     → Agent loop → Tools (MCP-style) | Azure OpenAI / Foundry
+     → OpenTelemetry → Application Insights
+     (IaC: Bicep provisioned via azd)</div>
+    <h3>Cloud LLM backends</h3>
+    <pre><code># Foundry Agent Service (endpoint 2)
+FOUNDRY_PROJECT_ENDPOINT=https://qmfi-research-project-resource.services.ai.azure.com/api/projects/qmfi-research-project
+
+# Azure OpenAI (endpoint 1)
+AZURE_OPENAI_ENDPOINT=https://qmfi-research-project-resource.openai.azure.com/openai/v1
+
+# neither set → FakeLLM (hermetic local runs)</code></pre>
+  </section>
+
+  <section>
+    <h2>Local verification</h2>
+    <pre><code>bash scripts/run_tests.sh
+# py_compile OK · 5/5 unit tests PASS · deploy.sh + azure.yaml valid
+
+python3 -m src.agent.service 8000   # boots (FakeLLM); Foundry/AOAI if env set</code></pre>
+    <ul class="checks">
+      <li><span class="ok">✅</span> Agent tool dispatch &amp; final-answer synthesis</li>
+      <li><span class="ok">✅</span> Tool errors caught, never crash the loop</li>
+      <li><span class="ok">✅</span> Remediation: write-never-delete enforced</li>
+      <li><span class="ok">✅</span> Multi-agent orchestration chaining</li>
+      <li><span class="ok">✅</span> Bounded step count (termination guaranteed)</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Deploy (Gold-Path)</h2>
+    <pre><code>cd Microsoft/azure-agent-blueprint
+export AZURE_OPENAI_ENDPOINT="https://&lt;your&gt;.openai.azure.com/"
+bash scripts/deploy.sh        # azd up → Bicep → Container App</code></pre>
+    <p style="color:var(--muted);margin-top:12px">Requires <code>az</code> + <code>azd</code> + <code>docker</code> on the deploy host.</p>
+  </section>
+
+  <section>
+    <h2>Roadmap status</h2>
+    <ul class="checks">
+      <li><span class="ok">✅ Phase 0</span> Foundation — agent core, tools, orchestrator, observability</li>
+      <li><span class="ok">✅ Phase 1</span> Cloud LLM backends coded (Azure OpenAI + Foundry)</li>
+      <li><span class="ok">✅ Phase 2</span> IaC + Docker + deploy scripts + sync workflow</li>
+      <li><span class="ok">✅ Phase 3</span> M365 MCP in Hermes (own-app switch not required)</li>
+      <li><span class="pend">🟡 Phase 3b</span> Web presence / landing page (this site)</li>
+      <li><span class="pend">⬜ Phase 4</span> Hardening: auth on HTTP, CI, Redis checkpointing, real tool-calling</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Repo</h2>
+    <p><a href="https://github.com/qapdex-maker/azure-agent-blueprint">github.com/qapdex-maker/azure-agent-blueprint</a> —
+       public, Apache-2.0 style MIT. See <code>README.md</code> for full docs and <code>ROADMAP.md</code> for the plan.</p>
+  </section>
+
+</div>
+
+<footer>
+  Azure Agent Blueprint · derived from the Microsoft Gold-Path (agent-framework, durable-task, mcp, azure-finops-agent, foundry-agent-webapp, get-started-with-ai-agents) · Built on Termux/Android.
+</footer>
+</body>
+</html>

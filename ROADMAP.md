@@ -42,11 +42,18 @@ Legend: ✅ done · 🟡 partial/local-only · ⬜ open
 - [x] M365 MCP registered in Hermes (`microsoft365`, 183 tools, login valid,
       token persistent in `~/.cache/ms365-mcp/`). Built-in app (53003 risk on
       admin scopes).
-- [ ] **Switch M365 to own Azure app** (`98801190-…` client + `qmfiresearch`
-      tenant) to unlock admin scopes (Planner, full SharePoint, Teams-admin).
+- [x] **Switch to own Azure app NOT required** (user decision 2026-07-25) —
+      built-in app retained; admin-scope gap accepted for now.
 - [ ] **Expose M365 tools inside the blueprint agent** (not via Hermes MCP —
       the container would call Microsoft Graph directly with its own token,
       or the agent runtime would bridge to the Hermes MCP). Open design decision.
+
+## Phase 3b — Web presence / landing page (🟡 in progress)
+- [x] Roadmap + repo structure on GitHub (`qapdex-maker/azure-agent-blueprint`).
+- [ ] **Landing page** (`site/index.html`) for the blueprint — built from the
+      web-development skill conventions (self-contained HTML/CSS; stitch/jules
+      CLI not available on this host, so hand-built). Explains the Gold-Path,
+      shows the architecture diagram, links to README + repo.
 
 ## Phase 4 — Hardening & next features (⬜)
 - [ ] Real LLM tool-calling (parse native function_call, not scripted TOOL()).
