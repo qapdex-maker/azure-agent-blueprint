@@ -26,7 +26,7 @@ if [ ! -d "$DST/.git" ]; then echo "DST not a git repo: $DST" >&2; exit 1; fi
 # remove old content except .git and .gitignore, then copy fresh
 find "$DST" -mindepth 1 -maxdepth 1 ! -name '.git' ! -name '.gitignore' -exec rm -rf {} +
 cp -r "$SRC/src" "$SRC/infra" "$SRC/tests" "$SRC/scripts" "$SRC/site" "$SRC/docs" "$DST/" 2>/dev/null || true
-for f in README.md azure.yaml Dockerfile requirements.txt ROADMAP.md; do
+for f in README.md azure.yaml Dockerfile requirements.txt ROADMAP.md Tree.md; do
   [ -f "$SRC/$f" ] && cp "$SRC/$f" "$DST/"
 done
 # drop pycache
