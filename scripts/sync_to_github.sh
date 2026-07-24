@@ -13,8 +13,8 @@
 #   bash scripts/sync_to_github.sh --dry      # copy only, no commit/push
 set -euo pipefail
 
-SRC="/home/repo/own/Microsoft/azure-agent-blueprint"
-DST="/tmp/azure-agent-blueprint-push"
+SRC="/data/data/com.termux/files/home/repo/own/Microsoft/azure-agent-blueprint"
+DST="$HOME/azure-agent-blueprint-push"
 MSG="${1:-Update Azure Agent Blueprint (sync)}"
 DRY=0
 [ "${1:-}" = "--dry" ] && { DRY=1; MSG="dry-run"; }
@@ -25,7 +25,7 @@ if [ ! -d "$DST/.git" ]; then echo "DST not a git repo: $DST" >&2; exit 1; fi
 # 1) copy blueprint files (portable, no rsync dependency)
 # remove old content except .git and .gitignore, then copy fresh
 find "$DST" -mindepth 1 -maxdepth 1 ! -name '.git' ! -name '.gitignore' -exec rm -rf {} +
-cp -r "$SRC/src" "$SRC/infra" "$SRC/tests" "$SRC/scripts" "$SRC/site" "$DST/" 2>/dev/null || true
+cp -r "$SRC/src" "$SRC/infra" "$SRC/tests" "$SRC/scripts" "$SRC/site" "$SRC/docs" "$DST/" 2>/dev/null || true
 for f in README.md azure.yaml Dockerfile requirements.txt ROADMAP.md; do
   [ -f "$SRC/$f" ] && cp "$SRC/$f" "$DST/"
 done

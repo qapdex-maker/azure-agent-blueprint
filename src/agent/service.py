@@ -35,6 +35,7 @@ def build_llm():
             project_endpoint=foundry_ep,
             api_key=os.environ.get("FOUNDRY_API_KEY"),
             agent_id=os.environ.get("FOUNDRY_AGENT_ID"),
+            token=os.environ.get("FOUNDRY_TOKEN"),
         )
     if aoai_ep:
         return AzureOpenAIClient(
