@@ -1,0 +1,18 @@
+# azure.yaml — Azure Developer CLI (azd) configuration
+# Gold-Path: `azd up` deploys infra/main.bicep then builds & pushes the container.
+name: azure-agent-blueprint
+services:
+  agent:
+    project: .
+    language: python
+    host: containerapp
+    docker:
+      path: Dockerfile
+    hooks:
+      postdeploy:
+        windows:
+          shell: pwsh
+          run: echo "Deployed azure-agent-blueprint"
+        posix:
+          shell: sh
+          run: echo "Deployed azure-agent-blueprint"

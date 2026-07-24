@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.env
+
+# Azure local secrets / state
+*.local.settings.json
+.azure/
+azd.env
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+
+# Test/coverage artifacts
+.pytest_cache/
+.coverage
+htmlcov/
