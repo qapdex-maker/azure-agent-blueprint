@@ -15,6 +15,10 @@ observed across 13 repos in `Microsoft/`:
   with pluggable checkpointing (durable-task `reliable_streaming` pattern).
 - **Observability** (`src/agent/observability.py`) — OpenTelemetry + Azure Monitor
   (Application Insights), on by default (matches get-started / foundry samples).
+- **Two cloud LLM backends, env-selected** (no secrets in code):
+  - `src/agent/azure.py` — Azure OpenAI (endpoint 1)
+  - `src/agent/foundry.py` — **Azure AI Foundry Agent Service** (endpoint 2,
+    project URL). Selected when `FOUNDRY_PROJECT_ENDPOINT` is set.
 - **Infra-as-Code** (`infra/main.bicep` + `azure.yaml`) — `azd up` one-command
   deploy: RG → Log Analytics + App Insights → Container App + Managed Identity.
 - **Container** (`Dockerfile`, non-root) + **HTTP service** (`src/agent/service.py`).
@@ -39,6 +43,15 @@ Uses `FakeLLM` so the full agent loop + tool dispatch run hermetically.
 ## Deploy (Gold-Path — run on an Azure-capable host)
 Prereqs: `az`, `azd`, `docker` installed; Azure subscription with Azure OpenAI
 or Foundry quota in the target region.
+
+Two LLM backends are supported (selected by env, no secrets in code):
+- **Azure AI Foundry Agent Service** (endpoint 2): set `FOUNDRY_PROJECT_ENDPOINT`
+  to your project URL, e.g.
+  `https://qmfi-research-project-resource.services.ai.azure.com/api/projects/qmfi-research-project`
+  and optionally `FOUNDRY_AGENT_ID` + `FOUNDRY_API_KEY` (or Entra token).
+- **Azure OpenAI** (endpoint 1): set `AZURE_OPENAI_ENDPOINT` + `AZURE_OPENAI_API_KEY`
+  (+ `AZURE_OPENAI_DEPLOYMENT`, default `gpt-4o`).
+If neither is set, the service falls back to `FakeLLM` (hermetic local runs).
 ```bash
 cd Microsoft/azure-agent-blueprint
 export AZURE_OPENAI_ENDPOINT="https://<your>.openai.azure.com/"

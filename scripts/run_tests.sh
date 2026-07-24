@@ -18,6 +18,7 @@ python3 -m py_compile \
   "$REPO_ROOT/src/agent/base.py" \
   "$REPO_ROOT/src/agent/fakellm.py" \
   "$REPO_ROOT/src/agent/azure.py" \
+  "$REPO_ROOT/src/agent/foundry.py" \
   "$REPO_ROOT/src/agent/observability.py" \
   "$REPO_ROOT/src/agent/service.py" \
   "$REPO_ROOT/src/tools/builtin.py" \

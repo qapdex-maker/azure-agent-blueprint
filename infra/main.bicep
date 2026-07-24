@@ -11,6 +11,8 @@ param environment string = 'dev'
 param appName string = 'azure-agent-blueprint'
 param openAiEndpoint string = ''   // set via azd env or pipeline
 param openAiDeployment string = 'gpt-4o'
+param foundryProjectEndpoint string = ''  // Azure AI Foundry project endpoint
+param foundryAgentId string = ''
 
 var rgName = '${appName}-${environment}-rg'
 var lawName = '${appName}-${environment}-law'
@@ -80,6 +82,8 @@ resource containerApp 'Microsoft.App/containerApps@2023-05-01' = {
           { name: 'APPINSIGHTS_CONNECTION_STRING', value: appInsights.properties.ConnectionString }
           { name: 'AZURE_OPENAI_ENDPOINT', value: openAiEndpoint }
           { name: 'AZURE_OPENAI_DEPLOYMENT', value: openAiDeployment }
+          { name: 'FOUNDRY_PROJECT_ENDPOINT', value: foundryProjectEndpoint }
+          { name: 'FOUNDRY_AGENT_ID', value: foundryAgentId }
         ]
       }]
     }
