@@ -1,7 +1,7 @@
 """Foundry Agent Service client (Azure AI Foundry project endpoint).
 
-Targets the Foundry Agent Service REST API exposed under an AI Foundry
-project, e.g.:
+Targets the Foundry Agent Service OpenAI-compatible protocols exposed under
+an AI Foundry project, e.g.:
     https://<project-resource>.services.ai.azure.com/api/projects/<project>
 
 This client mirrors the `AzureOpenAIClient` interface (same `complete()`
@@ -11,11 +11,20 @@ verification — it requires a live Foundry project + credential.
 
 Auth (per the Foundry quickstart: `az login` before running scripts):
   Foundry Agent Service uses **Entra ID** (Bearer token from
-  `az account get-access-token`), NOT an api-key, for the project endpoint.
-  Provide the token via `FOUNDRY_TOKEN`, or let the client shell out to
-  `az account get-access-token` on a host where `az` is installed. An
-  `api-key` is also accepted as a fallback (some deployments expose one).
+  `az account get-access-token` / `azure-identity`), NOT an api-key, for the
+  project endpoint. Provide the token via `FOUNDRY_TOKEN`, or let the client
+  shell out to `az account get-access-token` on a host where `az` is installed.
 No client secret is hardcoded; all creds come from env / managed identity.
+
+Endpoint shape (your project):
+  base    = https://qmfi-research-project-resource.services.ai.azure.com
+  project = qmfi-research-project
+  agent   = NatureLM-Idun-5-MoE   (set FOUNDRY_AGENT_ID)
+  route   = {base}/api/projects/{project}/agents/{agent}/
+             endpoint/protocols/openai/responses?api-version={FOUNDRY_API_VERSION}
+
+The `responses` protocol is OpenAI-Responses-shaped: the answer lives in
+`output[].content[].text` (not `choices[].message.content`).
 """
 from __future__ import annotations
 
@@ -29,17 +38,7 @@ _TOKEN_RESOURCE = "https://ai.azure.com"  # Entra audience for Foundry
 
 
 class FoundryClient(LLMClient):
-    """Async client for Azure AI Foundry Agent Service.
-
-    Endpoint pattern (your project):
-      base   = https://qmfi-research-project-resource.services.ai.azure.com
-      project= qmfi-research-project
-      chat   = {base}/api/projects/{project}/openai/chat/completions
-
-    The `agent_id` is the Foundry agent you created in the portal (or via
-    `az ai project agent create`). If None, the client calls the project's
-    default chat completions endpoint.
-    """
+    """Async client for Azure AI Foundry Agent Service (OpenAI responses protocol)."""
 
     def __init__(
         self,
@@ -47,13 +46,15 @@ class FoundryClient(LLMClient):
         api_key: Optional[str] = None,
         agent_id: Optional[str] = None,
         token: Optional[str] = None,
-        api_version: str = "2024-05-01-preview",
+        api_version: Optional[str] = None,
     ) -> None:
         self.project_endpoint = project_endpoint.rstrip("/")
         self.api_key = api_key
-        self.agent_id = agent_id
+        self.agent_id = agent_id or os.environ.get("FOUNDRY_AGENT_ID")
+        # api-version is project-specific; read from env, else default
+        # verified working value for qmfi-research-project (2026-07-25).
+        self.api_version = api_version or os.environ.get("FOUNDRY_API_VERSION") or "2025-05-15-preview"
         self._token = token
-        self.api_version = api_version
         self._client = None
 
     def _ensure_client(self):
@@ -68,13 +69,19 @@ class FoundryClient(LLMClient):
         return self._client
 
     def _chat_url(self) -> str:
-        if self.agent_id:
-            return (
-                f"{self.project_endpoint}/api/projects/"
-                f"qmfi-research-project/aiagents/{self.agent_id}/chat/completions"
+        if not self.agent_id:
+            raise ValueError(
+                "FOUNDRY_AGENT_ID (or agent_id=) required for the responses protocol"
             )
-        # project-level default chat completions (OpenAI-compatible)
-        return f"{self.project_endpoint}/openai/chat/completions"
+        # project_endpoint is the base, e.g.
+        # https://<resource>.services.ai.azure.com
+        base = (
+            f"{self.project_endpoint}/api/projects/qmfi-research-project/"
+            f"agents/{self.agent_id}/endpoint/protocols/openai/responses"
+        )
+        if self.api_version:
+            base += f"?api-version={self.api_version}"
+        return base
 
     def _resolve_token(self) -> Optional[str]:
         if self._token:
@@ -106,16 +113,28 @@ class FoundryClient(LLMClient):
                 h["Authorization"] = f"Bearer {tok}"
         return h
 
+    @staticmethod
+    def _extract_text(data: dict) -> str:
+        # OpenAI Responses shape: data["output"] is a list of blocks, each with
+        # content[]; text lives in content[].text or content[].input.
+        for block in data.get("output", []):
+            for c in block.get("content", []):
+                if c.get("type") == "output_text" and c.get("text"):
+                    return c["text"]
+                if "text" in c and isinstance(c["text"], str):
+                    return c["text"]
+        # fallback: top-level "text" or "content"
+        return data.get("text") or data.get("content") or ""
+
     async def complete(self, messages: List[Message], tools: List[Tool]) -> Message:
         client = self._ensure_client()
+        # OpenAI Responses uses "input" (string or list), not "messages"
         payload: dict = {
-            "messages": [{"role": m.role, "content": m.content} for m in messages],
+            "input": [{"role": m.role, "content": m.content} for m in messages],
         }
         if tools:
             payload["tools"] = [t.to_schema() for t in tools]
         resp = await client.post(self._chat_url(), headers=self._headers(), json=payload)
         resp.raise_for_status()
         data = resp.json()
-        # Foundry chat/completions returns OpenAI-compatible shape
-        content = data.get("choices", [{}])[0].get("message", {}).get("content", "")
-        return Message(role="assistant", content=content or "")
+        return Message(role="assistant", content=self._extract_text(data) or "")
