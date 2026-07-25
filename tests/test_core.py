@@ -10,7 +10,7 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from src.agent.base import Agent, Message
-from src.agent.fakellm import LocalLLM
+from src.agent.localllm import LocalLLM
 from src.tools.builtin import CostLookupTool, RemediationScriptTool, ClockTool
 from src.orchestrator.chain import Orchestrator, ChainStep
 

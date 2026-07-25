@@ -13,7 +13,7 @@ import sys
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 from src.agent.base import Agent, Message
-from src.agent.fakellm import LocalLLM
+from src.agent.localllm import LocalLLM
 from src.agent.azure import AzureOpenAIClient
 from src.agent.foundry import FoundryClient
 from src.tools.builtin import CostLookupTool, RemediationScriptTool, ClockTool
